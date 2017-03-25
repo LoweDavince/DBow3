@@ -1,13 +1,13 @@
 INCLUDE_DIRECTORIES(. ./utils/)
 
 FILE(GLOB hdrs_base "*.h" )
-FILE(GLOB srcs_base "*.c*")
+FILE(GLOB srcs_base "*.cpp")
 
 FILE(GLOB hdrs ${hdrs_base}  )
 FILE(GLOB srcs  ${srcs_base} )
 
 
-ADD_LIBRARY(${PROJECT_NAME} ${srcs} ${hdrs})
+ADD_LIBRARY(${PROJECT_NAME} SHARED ${srcs} ${hdrs})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ) 
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES 				# create *nix style library versions + symbolic links

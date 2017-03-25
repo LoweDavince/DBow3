@@ -66,7 +66,7 @@ vector< cv::Mat  >  loadFeatures( std::vector<string> path_to_images,string desc
 
 
     cout << "Extracting   features..." << endl;
-    for(size_t i = 0; i < path_to_images.size(); ++i)
+    for(int i = 0; i < path_to_images.size(); ++i)
     {
         vector<cv::KeyPoint> keypoints;
         cv::Mat descriptors;
@@ -86,7 +86,7 @@ vector< cv::Mat  >  loadFeatures( std::vector<string> path_to_images,string desc
 void testVocCreation(const vector<cv::Mat> &features)
 {
     // branching factor and depth levels
-    const int k = 9;
+    const int k = 5;
     const int L = 3;
     const WeightingType weight = TF_IDF;
     const ScoringType score = L1_NORM;
@@ -103,10 +103,12 @@ void testVocCreation(const vector<cv::Mat> &features)
     // lets do something with this vocabulary
     cout << "Matching images against themselves (0 low, 1 high): " << endl;
     BowVector v1, v2;
-    for(size_t i = 0; i < features.size(); i++)
+    for(int i = 0; i < features.size(); i++)
     {
         voc.transform(features[i], v1);
-        for(size_t j = 0; j < features.size(); j++)
+        //std::cout<< features[i] <<std::endl;
+        std::cout<< v1 <<std::endl;
+        for(int j = 0; j < features.size(); j++)
         {
             voc.transform(features[j], v2);
 
@@ -137,7 +139,7 @@ void testDatabase(const  vector<cv::Mat > &features)
     // db creates a copy of the vocabulary, we may get rid of "voc" now
 
     // add images to the database
-    for(size_t i = 0; i < features.size(); i++)
+    for(int i = 0; i < features.size(); i++)
         db.add(features[i]);
 
     cout << "... done!" << endl;
@@ -148,7 +150,7 @@ void testDatabase(const  vector<cv::Mat > &features)
     cout << "Querying the database: " << endl;
 
     QueryResults ret;
-    for(size_t i = 0; i < features.size(); i++)
+    for(int i = 0; i < features.size(); i++)
     {
         db.query(features[i], ret, 4);
 
@@ -172,6 +174,11 @@ void testDatabase(const  vector<cv::Mat > &features)
     cout << "... done! This is: " << endl << db2 << endl;
 }
 
+// ----------------------------------------------------------------------------
+
+void saveFeatures(const  vector< cv::Mat   > &features){
+
+}
 
 // ----------------------------------------------------------------------------
 
@@ -180,17 +187,21 @@ int main(int argc,char **argv)
 
     try{
         CmdLineParser cml(argc,argv);
-        if (cml["-h"] || argc<=2){
-            cerr<<"Usage:  descriptor_name     image0 image1 ... \n\t descriptors:brisk,surf,orb ,akaze(only if using opencv 3)"<<endl;
-             return -1;
+        if (cml["-h"] || argc==1){
+            cerr<<"Usage:  descriptor_name action output image0 image1 ... \n\t descriptors:brisk,surf,orb(default),akaze(only if using opencv 3)"<<endl;
+            cerr<<"actions:\n\t0 : compute and save features\n\t1:create voc from features"<<endl;
+            return -1;
         }
 
         string descriptor=argv[1];
+        string out_features=argv[2];
+        string out_voc=argv[3];
 
-        auto images=readImagePaths(argc,argv,2);
+        auto images=readImagePaths(argc,argv,4);
         vector< cv::Mat   >   features= loadFeatures(images,descriptor);
         testVocCreation(features);
 
+        wait();
 
         testDatabase(features);
 

@@ -25,10 +25,10 @@
 #include "ScoringObject.h"
 #include <limits>
 namespace DBoW3 {
+
 ///   Vocabulary
 class DBOW_API Vocabulary
 {		
-friend class FastSearch;
 public:
   
   /**
@@ -121,9 +121,6 @@ public:
    */
   virtual inline bool empty() const{ return m_words.empty();}
 
-  /** Clears the vocabulary object
-   */
-  void clear();
   /**
    * Transforms a set of descriptores into a bow vector
    * @param features
@@ -238,17 +235,17 @@ public:
   void setScoringType(ScoringType type);
   
   /**
-   * Saves the vocabulary into a file. If filename extension contains .yml, opencv YALM format is used. Otherwise, binary format is employed
+   * Saves the vocabulary into a file
    * @param filename
    */
-  void save(const std::string &filename, bool binary_compressed=true) const;
-
+  void save(const std::string &filename) const;
+  
   /**
-   * Loads the vocabulary from a file created with save
-   * @param filename.
+   * Loads the vocabulary from a file
+   * @param filename
    */
   void load(const std::string &filename);
-
+  
   /** 
    * Saves the vocabulary to a file storage structure
    * @param fn node in file storage
@@ -264,7 +261,7 @@ public:
    */  
   virtual void load(const cv::FileStorage &fs, 
     const std::string &name = "vocabulary");
-
+  
   /** 
    * Stops those words whose weight is below minWeight.
    * Words are stopped by setting their weight to 0. There are not returned
@@ -279,18 +276,7 @@ public:
    */
   virtual int stopWords(double minWeight);
 
-
-  /** Returns the size of the descriptor employed. If the Vocabulary is empty, returns -1
-   */
-  int getDescritorSize()const;
-  /** Returns the type of the descriptor employed normally(8U_C1, 32F_C1)
-   */
-  int getDescritorType()const;
-  //io to-from a stream
-  void toStream(  std::ostream &str, bool compressed=true) const throw(std::exception);
-  void fromStream(  std::istream &str )   throw(std::exception);
-
- protected:
+protected:
 
   ///  reference to descriptor
   typedef const cv::Mat pDescriptor;
@@ -354,17 +340,7 @@ protected:
    * @param levelsup
    */
   virtual void transform(const cv::Mat &feature,
-    WordId &id, WordValue &weight, NodeId* nid  , int levelsup = 0) const;
-  /**
-   * Returns the word id associated to a feature
-   * @param feature
-   * @param id (out) word id
-   * @param weight (out) word weight
-   * @param nid (out) if given, id of the node "levelsup" levels up
-   * @param levelsup
-   */
-  virtual void transform(const cv::Mat &feature,
-    WordId &id, WordValue &weight ) const;
+    WordId &id, WordValue &weight, NodeId* nid = NULL, int levelsup = 0) const;
 
   /**
    * Returns the word id associated to a feature
@@ -420,11 +396,6 @@ protected:
    * @param voc
    */
    DBOW_API friend std::ostream& operator<<(std::ostream &os,  const Vocabulary &voc);
-
-   /**Loads from ORBSLAM txt files
-    */
-   void load_fromtxt(const std::string &filename)throw(std::runtime_error);
-
 protected:
 
   /// Branching factor
@@ -448,10 +419,7 @@ protected:
   /// Words of the vocabulary (tree leaves)
   /// this condition holds: m_words[wid]->word_id == wid
   std::vector<Node*> m_words;
-public:
-  //for debug (REMOVE)
-  inline Node* getNodeWord(uint32_t idx){return m_words[idx];}
-
+  
 };
 
 

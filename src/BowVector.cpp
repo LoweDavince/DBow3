@@ -91,12 +91,15 @@ std::ostream& operator<< (std::ostream &out, const BowVector &v)
   std::vector<unsigned int>::const_iterator iit;
   unsigned int i = 0; 
   const size_t N = v.size();
+  double w= 0;
   for(vit = v.begin(); vit != v.end(); ++vit, ++i)
   {
     out << "<" << vit->first << ", " << vit->second << ">";
+    w = w + vit->second;
     
     if(i < N-1) out << ", ";
   }
+  //std::cout << w << std::endl; //w will be 1
   return out;
 }
 
@@ -123,39 +126,6 @@ void BowVector::saveM(const std::string &filename, size_t W) const
   
   f.close();
 }
-// --------------------------------------------------------------------------
-
-void BowVector::toStream(std::ostream &str)const{
-    uint32_t s=size();
-    str.write((char*)&s,sizeof(s));
-    for(auto d:*this){
-        str.write((char*)&d.first,sizeof(d.first));
-        str.write((char*)&d.second,sizeof(d.second));
-    }
-}
-// --------------------------------------------------------------------------
-
-void BowVector::fromStream(std::istream &str){
-clear();
-uint32_t s;
-
-str.read((char*)&s,sizeof(s));
-for(int i=0;i<s;i++){
-    WordId wid;
-    WordValue wv;
-    str.read((char*)&wid,sizeof(wid));
-    str.read((char*)&wv,sizeof(wv));
-    insert(std::make_pair(wid,wv));
-}
-
-}
-
-uint64_t BowVector::getSignature()const{
-uint64_t sig=0;
-for(auto ww:*this) sig+=ww.first+1e6*ww.second;
-return sig;
-}
-
 
 // --------------------------------------------------------------------------
 

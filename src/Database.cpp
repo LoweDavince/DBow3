@@ -72,7 +72,7 @@ Database& Database::operator=
     m_ifile = db.m_ifile;
     m_nentries = db.m_nentries;
     m_use_di = db.m_use_di;
-    if (db.m_voc!=0) setVocabulary(*db.m_voc);
+    setVocabulary(*db.m_voc);
   }
   return *this;
 }
@@ -85,7 +85,7 @@ EntryId Database::add(
 {
     std::vector<cv::Mat> vf(features.rows);
     for(int r=0;r<features.rows;r++) vf[r]=features.rowRange(r,r+1);
-    return add(vf,bowvec,fvec);
+    add(vf,bowvec,fvec);
 }
 
 EntryId Database::add(
@@ -830,10 +830,19 @@ void Database::save(cv::FileStorage &fs,
   //   directIndex
   //   [
   //      [
+  //      -(image 0)
   //        {
   //          nodeId:
   //          features: [ ]
   //        }
+  //      -(image 1)
+  //        {
+  //          nodeId:
+  //          features: [ ]
+  //        }
+  //        .
+  //        .
+  //        .
   //      ]
   //   ]
 

@@ -36,7 +36,7 @@ void DescManip::meanValue(const std::vector<cv::Mat> &descriptors,
     //binary descriptor
     if (descriptors[0].type()==CV_8U ){
         //determine number of bytes of the binary descriptor
-        int L= getDescSizeBytes( descriptors[0]);
+        int L= getnBytes( descriptors[0]);
         vector<int> sum( L * 8, 0);
 
         for(size_t i = 0; i < descriptors.size(); ++i)
@@ -87,35 +87,31 @@ void DescManip::meanValue(const std::vector<cv::Mat> &descriptors,
 }
 
 // --------------------------------------------------------------------------
-static  inline uint32_t distance_8uc1(const cv::Mat &a, const cv::Mat &b);
 
 double DescManip::distance(const cv::Mat &a,  const cv::Mat &b)
 {
 
     //binary descriptor
     if (a.type()==CV_8U){
-
         // Bit count function got from:
-         // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
-         // This implementation assumes that a.cols (CV_8U) % sizeof(uint64_t) == 0
+        // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
+        // This implementation assumes that a.cols (CV_8U) % sizeof(uint64_t) == 0
 
-         const uint64_t *pa, *pb;
-         pa = a.ptr<uint64_t>(); // a & b are actually CV_8U
-         pb = b.ptr<uint64_t>();
+        const uint64_t *pa, *pb;
+        pa = a.ptr<uint64_t>(); // a & b are actually CV_8U
+        pb = b.ptr<uint64_t>();
 
-         uint64_t v, ret = 0;
-         for(size_t i = 0; i < a.cols / sizeof(uint64_t); ++i, ++pa, ++pb)
-         {
-           v = *pa ^ *pb;
-           v = v - ((v >> 1) & (uint64_t)~(uint64_t)0/3);
-           v = (v & (uint64_t)~(uint64_t)0/15*3) + ((v >> 2) &
-             (uint64_t)~(uint64_t)0/15*3);
-           v = (v + (v >> 4)) & (uint64_t)~(uint64_t)0/255*15;
-           ret += (uint64_t)(v * ((uint64_t)~(uint64_t)0/255)) >>
-             (sizeof(uint64_t) - 1) * CHAR_BIT;
-         }
+        uint64_t v, ret = 0;
+        for(size_t i = 0; i < a.cols / sizeof(uint64_t); ++i, ++pa, ++pb)
+        {
+            v = *pa ^ *pb;
+            v = v - ((v >> 1) & (uint64_t)~(uint64_t)0/3);
+            v = (v & (uint64_t)~(uint64_t)0/15*3) + ((v >> 2) & (uint64_t)~(uint64_t)0/15*3);
+            v = (v + (v >> 4)) & (uint64_t)~(uint64_t)0/255*15;
+            ret += (uint64_t)(v * ((uint64_t)~(uint64_t)0/255)) >>(sizeof(uint64_t) - 1) * CHAR_BIT;
+        }
 
-         return ret;
+        return ret;
     }
     else{
         double sqd = 0.;
@@ -137,8 +133,6 @@ double DescManip::distance(const cv::Mat &a,  const cv::Mat &b)
 std::string DescManip::toString(const cv::Mat &a)
 {
     stringstream ss;
-    //introduce a magic value to distinguish from DBOw2
-    ss<<"dbw3 ";
     //save size and type
 
 
@@ -164,39 +158,23 @@ std::string DescManip::toString(const cv::Mat &a)
 void DescManip::fromString(cv::Mat &a, const std::string &s)
 {
 
-    //check if the dbow3 is present
-    string ss_aux;ss_aux.reserve(10);
-    for(size_t i=0;i<10 && i<s.size();i++)
-        ss_aux.push_back(s[i]);
-    if(ss_aux.find("dbw3")==std::string::npos){//is dbow2
-        //READ UNTIL END
-        stringstream ss(s);
-        int val;
-        vector<uchar> data;data.reserve(100);
-        while( ss>>val) data.push_back(val);
-        //copy to a
-        a.create(1,data.size(),CV_8UC1);
-        memcpy(a.ptr<char>(0),&data[0],data.size());
-    }
-    else{
-        int type,cols;
-        stringstream ss(s);
-        ss >>type>>cols;
-        a.create(1,  cols, type);
-        if(type==CV_8UC1){
-            unsigned char *p = a.ptr<unsigned char>();
-            int n;
-            for(int i = 0; i <  a.cols; ++i, ++p)
-                if ( ss >> n) *p = (unsigned char)n;
-        }
-        else{
-            float *p = a.ptr<float>();
-            for(int i = 0; i <  a.cols; ++i, ++p)
-                if ( !(ss >> *p))cerr<<"Error reading. Unexpected EOF. DescManip::fromString"<<endl;
-        }
+  int type,cols;
+  stringstream ss(s);
+  ss >>type>>cols;
+  a.create(1,  cols, type);
+  if(type==CV_8UC1){
+  unsigned char *p = a.ptr<unsigned char>();
+  int n;
+  for(int i = 0; i <  a.cols; ++i, ++p)
+    if ( ss >> n) *p = (unsigned char)n;
+  }
+  else{
+      float *p = a.ptr<float>();
+      for(int i = 0; i <  a.cols; ++i, ++p)
+        if ( !(ss >> *p))cerr<<"Error reading. Unexpected EOF. DescManip::fromString"<<endl;
+  }
 
-    }
-
+  
 }
 
 // --------------------------------------------------------------------------
@@ -213,7 +191,7 @@ void DescManip::toMat32F(const std::vector<cv::Mat> &descriptors,
     if(descriptors[0].type()==CV_8UC1){
 
         const size_t N = descriptors.size();
-        int L=getDescSizeBytes(descriptors[0]);
+        int L=getnBytes(descriptors[0]);
         mat.create(N,  L*8, CV_32F);
         float *p = mat.ptr<float>();
 
@@ -245,25 +223,6 @@ void DescManip::toMat32F(const std::vector<cv::Mat> &descriptors,
     }
 }
 
-void DescManip::toStream(const cv::Mat &m,std::ostream &str){
-    assert(m.rows==1 || m.isContinuous());
-    int type=m.type();
-    int cols=m.cols;
-    int rows=m.rows;
-    str.write((char*)&cols,sizeof(cols));
-    str.write((char*)&rows,sizeof(rows));
-    str.write((char*)&type,sizeof(type));
-    str.write((char*)m.ptr<char>(0),m.elemSize()*m.cols);
-}
-
-void DescManip::fromStream(cv::Mat &m,std::istream &str){
-    int type,cols,rows;
-    str.read((char*)&cols,sizeof(cols));
-    str.read((char*)&rows,sizeof(rows));
-    str.read((char*)&type,sizeof(type));
-    m.create(rows,cols,type);
-    str.read((char*)m.ptr<char>(0),m.elemSize()*m.cols);
-}
 
 
 // --------------------------------------------------------------------------

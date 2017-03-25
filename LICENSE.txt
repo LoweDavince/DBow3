@@ -1,6 +1,6 @@
-DBoW3: bag-of-words library for C++ with generic descriptors
+DBoW2: bag-of-words library for C++ with generic descriptors
 
-Copyright (c) 2016 Rafael Muñoz-Salinas
+Copyright (c) 2015 Dorian Galvez-Lopez. http://doriangalvez.com
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

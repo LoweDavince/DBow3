@@ -1,5 +1,10 @@
+/**
+ * Date:  2016
+ * Author: Rafael Muñoz Salinas
+ * Description: demo application of DBoW3
+ * License: see the LICENSE.txt file
+ */
 
-//First step of creating a vocabulary is extracting features from a set of images. We save them to a file for next step
 #include <iostream>
 #include <vector>
 
@@ -61,7 +66,7 @@ vector< cv::Mat  >  loadFeatures( std::vector<string> path_to_images,string desc
 
 
     cout << "Extracting   features..." << endl;
-    for(size_t i = 0; i < path_to_images.size(); ++i)
+    for(int i = 0; i < path_to_images.size(); ++i)
     {
         vector<cv::KeyPoint> keypoints;
         cv::Mat descriptors;
